@@ -15,6 +15,7 @@ Imports:
     ggplot2,
     ggrepel,
     glmnet,
+    knitr,
     magrittr,
     MALDIquant,
     MALDIquantForeign,
@@ -26,6 +27,5 @@ Depends:
     R (>= 2.10)
 RoxygenNote: 7.2.3
 Suggests: 
-    knitr,
     rmarkdown
 VignetteBuilder: knitr

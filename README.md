@@ -1,6 +1,22 @@
-Untitled
+Statistical modelling investigation of MALDI MS based approaches for
+document examination
 ================
+Johan Lassen
 2023-03-13
+
+- <a href="#1-visualize-the-spectra-of-the-average-sample"
+  id="toc-1-visualize-the-spectra-of-the-average-sample">1 Visualize the
+  spectra of the average sample</a>
+  - <a href="#11-visualize-unsupervised-machine-learning"
+    id="toc-11-visualize-unsupervised-machine-learning">1.1 Visualize
+    unsupervised machine learning</a>
+  - <a href="#12-visualize-unsupervised-age-patterns"
+    id="toc-12-visualize-unsupervised-age-patterns">1.2 Visualize
+    unsupervised age patterns</a>
+- <a href="#2-supervised-machine-learning"
+  id="toc-2-supervised-machine-learning">2 Supervised machine learning</a>
+- <a href="#3-all-pen-regressions" id="toc-3-all-pen-regressions">3 All
+  pen regressions</a>
 
 This package is the supporting code base and data for the publication
 **Statistical modelling investigation of MALDI MS based approaches for
@@ -33,12 +49,13 @@ library(glmnet)
 library(ggplot2)
 library(cowplot)
 library(ggrepel)
+library(knitr)
 
 # Project package
 library(ink)
 ```
 
-### Peak calling of validation data and training data
+### 0.0.1 Peak calling of validation data and training data
 
 ``` r
 # The two included datasets (msdata in maldiquant)
@@ -62,27 +79,21 @@ intensity_data <- as_tibble(featureMatrix)
 
 # Set colnames of feature tibble
 colnames(intensity_data) <- paste0("M", round(as.numeric(colnames(intensity_data)), 4))
-head(intensity_data)
+
+# Visualize the head
+head(intensity_data)[,1:10] |> knitr::kable()
 ```
 
-    ## # A tibble: 6 × 9,761
-    ##   M100.0978 M100.1042 M100.1086 M100.1…¹ M100.…² M101.…³ M101.…⁴ M102.…⁵ M102.…⁶
-    ##       <dbl>     <dbl>     <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1      2.26      1.50      1.69     1.66    1.65   2.39    2.36     1.50    4.98
-    ## 2      2.35      2.20      2.11     1.57    1.88   1.73    1.72     1.88    3.92
-    ## 3      2.39      2.26      2.25     2.23    2.22   1.78    1.86     1.95    1.49
-    ## 4      2.42      2.15      1.90     1.75    1.74   0.669   0.546    1.94    2.07
-    ## 5      3.45      2.91      2.68     2.27    1.97   1.09    2.48     1.72    1.61
-    ## 6      1.02      1.09      1.14     1.51    2.12   1.66    1.41     2.29    4.72
-    ## # … with 9,752 more variables: M104.1195 <dbl>, M104.1263 <dbl>,
-    ## #   M104.1327 <dbl>, M104.1392 <dbl>, M104.1422 <dbl>, M105.0579 <dbl>,
-    ## #   M105.064 <dbl>, M105.0702 <dbl>, M105.096 <dbl>, M106.1034 <dbl>,
-    ## #   M106.1107 <dbl>, M106.1181 <dbl>, M107.0643 <dbl>, M107.0734 <dbl>,
-    ## #   M107.0807 <dbl>, M107.1027 <dbl>, M107.1103 <dbl>, M107.1134 <dbl>,
-    ## #   M107.1162 <dbl>, M107.1211 <dbl>, M109.0958 <dbl>, M109.117 <dbl>,
-    ## #   M109.1256 <dbl>, M110.0891 <dbl>, M110.1068 <dbl>, M110.1167 <dbl>, …
+| M100.0978 | M100.1042 | M100.1086 | M100.1359 | M100.1558 | M101.0174 | M101.0957 | M102.0789 | M102.1139 | M104.1195 |
+|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|
+|  2.256795 |  1.501278 |  1.685417 |  1.664774 |  1.649710 | 2.3867975 | 2.3582668 |  1.499466 |  4.984403 |  3.428293 |
+|  2.354259 |  2.200811 |  2.107518 |  1.569836 |  1.876741 | 1.7307382 | 1.7229013 |  1.879449 |  3.921677 |  2.815165 |
+|  2.390773 |  2.255975 |  2.253053 |  2.234767 |  2.221423 | 1.7755028 | 1.8575855 |  1.951228 |  1.490928 |  2.121545 |
+|  2.422719 |  2.151157 |  1.902968 |  1.748592 |  1.735765 | 0.6691031 | 0.5455215 |  1.942464 |  2.067377 |  1.702180 |
+|  3.445834 |  2.914731 |  2.678153 |  2.271718 |  1.973973 | 1.0923073 | 2.4772140 |  1.720487 |  1.605792 |  2.135995 |
+|  1.024238 |  1.091803 |  1.137488 |  1.514281 |  2.123404 | 1.6620962 | 1.4085513 |  2.291243 |  4.715526 |  2.396093 |
 
-### Parse metadata retained in msdata filenames
+### 0.0.2 Parse metadata retained in msdata filenames
 
 ``` r
 inkdata <- 
@@ -112,27 +123,19 @@ inkdata <-
   ) |>
   bind_cols(intensity_data)
 
-head(inkdata)
+head(inkdata)[,1:10] |> knitr::kable()
 ```
 
-    ## # A tibble: 6 × 9,766
-    ##   pen   index rep     age type   M100.…¹ M100.…² M100.…³ M100.…⁴ M100.…⁵ M101.…⁶
-    ##   <chr> <chr> <chr> <dbl> <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ## 1 1     0     1        44 sample    2.26    1.50    1.69    1.66    1.65   2.39 
-    ## 2 1     0     2        44 sample    2.35    2.20    2.11    1.57    1.88   1.73 
-    ## 3 1     0     3        44 sample    2.39    2.26    2.25    2.23    2.22   1.78 
-    ## 4 1     1     1        41 sample    2.42    2.15    1.90    1.75    1.74   0.669
-    ## 5 1     1     2        41 sample    3.45    2.91    2.68    2.27    1.97   1.09 
-    ## 6 1     1     3        41 sample    1.02    1.09    1.14    1.51    2.12   1.66 
-    ## # … with 9,755 more variables: M101.0957 <dbl>, M102.0789 <dbl>,
-    ## #   M102.1139 <dbl>, M104.1195 <dbl>, M104.1263 <dbl>, M104.1327 <dbl>,
-    ## #   M104.1392 <dbl>, M104.1422 <dbl>, M105.0579 <dbl>, M105.064 <dbl>,
-    ## #   M105.0702 <dbl>, M105.096 <dbl>, M106.1034 <dbl>, M106.1107 <dbl>,
-    ## #   M106.1181 <dbl>, M107.0643 <dbl>, M107.0734 <dbl>, M107.0807 <dbl>,
-    ## #   M107.1027 <dbl>, M107.1103 <dbl>, M107.1134 <dbl>, M107.1162 <dbl>,
-    ## #   M107.1211 <dbl>, M109.0958 <dbl>, M109.117 <dbl>, M109.1256 <dbl>, …
+| pen | index | rep | age | type   | M100.0978 | M100.1042 | M100.1086 | M100.1359 | M100.1558 |
+|:----|:------|:----|----:|:-------|----------:|----------:|----------:|----------:|----------:|
+| 1   | 0     | 1   |  44 | sample |  2.256795 |  1.501278 |  1.685417 |  1.664774 |  1.649710 |
+| 1   | 0     | 2   |  44 | sample |  2.354259 |  2.200811 |  2.107518 |  1.569836 |  1.876741 |
+| 1   | 0     | 3   |  44 | sample |  2.390773 |  2.255975 |  2.253053 |  2.234767 |  2.221423 |
+| 1   | 1     | 1   |  41 | sample |  2.422719 |  2.151157 |  1.902968 |  1.748592 |  1.735765 |
+| 1   | 1     | 2   |  41 | sample |  3.445834 |  2.914731 |  2.678153 |  2.271718 |  1.973973 |
+| 1   | 1     | 3   |  41 | sample |  1.024238 |  1.091803 |  1.137488 |  1.514281 |  2.123404 |
 
-### Visualize the raw data before normalizing it
+### 0.0.3 Visualize the raw data before normalizing it
 
 ``` r
 pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
@@ -149,7 +152,7 @@ um$layout |>
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
 ``` r
 # container to ease preprocessing
@@ -174,7 +177,7 @@ ms            <- ms |> transform_log() |> normalize_robust_row()
 inkdata2      <- ms |> bind_cols()
 ```
 
-# Visualize the spectra of the average sample
+# 1 Visualize the spectra of the average sample
 
 Plotting the pooled spectra from the experiment across all time points
 
@@ -212,9 +215,9 @@ df2 <-
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
 
-## Visualize unsupervised machine learning
+## 1.1 Visualize unsupervised machine learning
 
 First we’ll assign feature values to x, time points to age, and pen
 brand to pen.
@@ -225,7 +228,7 @@ age       <- inkdata2 |> filter(type == "sample") |> pull(age)
 x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
 ```
 
-### Umap
+### 1.1.1 Umap
 
 ``` r
 um <- umap::umap(x)
@@ -248,7 +251,7 @@ umap_plot <-
     )
 ```
 
-### PCA
+### 1.1.2 PCA
 
 ``` r
 pca <- prcomp(x)
@@ -283,9 +286,9 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 
 ![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-## Visualize unsupervised age patterns
+## 1.2 Visualize unsupervised age patterns
 
-### Umap
+### 1.2.1 Umap
 
 ``` r
 um <- umap::umap(x)
@@ -308,7 +311,7 @@ umap_plot <-
     )
 ```
 
-### PCA
+### 1.2.2 PCA
 
 ``` r
 pca <- prcomp(x)
@@ -346,7 +349,7 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
-# Supervised machine learning
+# 2 Supervised machine learning
 
 ``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -356,7 +359,7 @@ val_data  <- inkdata2 |> filter(type == "validation") |> select(starts_with("M")
 signature <- inkdata2 |> filter(type == "validation") |> select(-starts_with("M")) |> pull(index)
 ```
 
-### Ink discrimination Model!
+### 2.0.1 Ink discrimination Model!
 
 Obtain: - cross validated hold out class predictions (variable: preds) -
 cross validated hold out class probabilities (variable: preds) - for
@@ -460,7 +463,7 @@ for (i in 1:length(unique(age))){
 feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M")) |> map_dbl(var, na.rm=T) |> sort(decreasing = T)
 ```
 
-### Machine learning performance
+### 2.0.2 Machine learning performance
 
 ``` r
 (
@@ -489,7 +492,7 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 
 ![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
-### Predictions on validation data
+### 2.0.3 Predictions on validation data
 
 ``` r
 signature <- inkdata2 |> filter(type == "validation") |> pull(index)
@@ -530,7 +533,7 @@ blinded_predictions <-
 
 ![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
-### Assessment of the predictions - do they fit into the distributions of the training data?
+### 2.0.4 Assessment of the predictions - do they fit into the distributions of the training data?
 
 > We are especially interested in signature 4 as it is uncertain in its
 > “john” predictions
@@ -541,7 +544,7 @@ only one predictor the linear model would be: y = a\*x + b. In this case
 the value on the y-value on the plot would be given by a multiplied by
 x.
 
-### assessment of all predictions - filled by
+### 2.0.5 assessment of all predictions - filled by
 
 ``` r
 n = 10
@@ -596,7 +599,7 @@ true_preds <-
 
 > NOTICE: At this point we do not know if the predictions are correct.
 
-# All pen regressions
+# 3 All pen regressions
 
 ``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -648,7 +651,7 @@ preds2 <-
 
 ![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
-### Model age!
+### 3.0.1 Model age!
 
 ``` r
 penwise_age <- list()
@@ -750,11 +753,11 @@ penwise_age |>
     ##   pen    RMSE    sd
     ##   <chr> <dbl> <dbl>
     ## 1 pen1   13.9  14.2
-    ## 2 pen2   12.6  14.2
-    ## 3 pen3   14.9  14.2
-    ## 4 pen4   12.5  14.2
+    ## 2 pen2   13.0  14.2
+    ## 3 pen3   15.0  14.2
+    ## 4 pen4   12.9  14.2
     ## 5 pen5   14.5  14.2
-    ## 6 pen6   15.0  14.2
+    ## 6 pen6   14.6  14.2
     ## 7 pen7   15.1  14.2
 
 ``` r
@@ -792,11 +795,11 @@ fdr_count |> ungroup() |>
     ##   pen     fdr  RMSE
     ##   <chr> <int> <dbl>
     ## 1 pen1    122  13.9
-    ## 2 pen4    117  12.5
+    ## 2 pen4    117  12.9
     ## 3 pen5     68  14.5
-    ## 4 pen2     66  12.6
-    ## 5 pen3     64  14.9
-    ## 6 pen6     51  15.0
+    ## 4 pen2     66  13.0
+    ## 5 pen3     64  15.0
+    ## 6 pen6     51  14.6
     ## 7 pen7     44  15.1
 
 ``` r
@@ -898,7 +901,7 @@ raw_data_significant_peaks <-
 
 ![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
-#### The pen with the most correlated features is pen1. Let’s do a PCA
+#### 3.0.1.1 The pen with the most correlated features is pen1. Let’s do a PCA
 
 ``` r
 pen1 <- 
@@ -939,7 +942,7 @@ plot_grid(pca_plot_pen1+theme(plot.margin = margin(0,0,20,0)), polymer_plot, nco
 
 ![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-###### Well.. lets do it for all pens
+###### 3.0.1.1.0.1 Well.. lets do it for all pens
 
 ``` r
 pen_plots <- list()

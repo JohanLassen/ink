@@ -4,6 +4,7 @@ output:
   github_document:
     toc: true
     toc_depth: 2
+    number_sections: true
     fig_width: 5
     fig_height: 5
 author: "Johan Lassen"
@@ -47,6 +48,7 @@ library(glmnet)
 library(ggplot2)
 library(cowplot)
 library(ggrepel)
+library(knitr)
 
 # Project package
 library(ink)
@@ -76,7 +78,10 @@ intensity_data <- as_tibble(featureMatrix)
 
 # Set colnames of feature tibble
 colnames(intensity_data) <- paste0("M", round(as.numeric(colnames(intensity_data)), 4))
-head(intensity_data)
+
+# Visualize the head
+head(intensity_data)[,1:10] |> knitr::kable()
+
 ```
 
 
@@ -109,13 +114,13 @@ inkdata <-
   ) |>
   bind_cols(intensity_data)
 
-head(inkdata)
+head(inkdata)[,1:10] |> knitr::kable()
 ```
 
 
 
 ### Visualize the raw data before normalizing it
-```{r}
+```{r, fig.align='center'}
 pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
 age   <- inkdata |> filter(type %in% c("sample", "validation")) |> pull(age)
 x     <- inkdata |> filter(type %in% c("sample", "validation")) |> select(starts_with("M"))
@@ -160,7 +165,7 @@ inkdata2      <- ms |> bind_cols()
 
 
 Plotting the pooled spectra from the experiment across all time points
-```{r}
+```{r, fig.align='center', fig.height=50, fig.width=10}
 # Extract mass and intensity from the raw data
 df <- 
   msdata |> 
