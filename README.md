@@ -155,6 +155,7 @@ um$layout |>
 <img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
 ``` r
+
 # container to ease preprocessing
 ms <- list()
 ms$values  <- inkdata |> select(starts_with("M")) 
@@ -368,6 +369,7 @@ end) - get the cross validated feature impact on the observations. I.e.,
 how much does feature X influence the prediction of a given sample.
 
 ``` r
+
 preds                  <- list()
 shap_impact_all        <- list()
 signature_preds        <- list()
@@ -654,6 +656,7 @@ preds2 <-
 ### 3.0.1 Model age!
 
 ``` r
+
 penwise_age <- list()
 for (pen_id in unique(pen)){
   
@@ -747,18 +750,17 @@ penwise_age |>
   group_by(pen) |> 
   summarise(RMSE = sqrt(mean((pred-obs)^2)),
             sd   = sd(obs))
+## # A tibble: 7 × 3
+##   pen    RMSE    sd
+##   <chr> <dbl> <dbl>
+## 1 pen1   13.8  14.2
+## 2 pen2   12.6  14.2
+## 3 pen3   15.1  14.2
+## 4 pen4   12.1  14.2
+## 5 pen5   14.6  14.2
+## 6 pen6   14.8  14.2
+## 7 pen7   15.1  14.2
 ```
-
-    ## # A tibble: 7 × 3
-    ##   pen    RMSE    sd
-    ##   <chr> <dbl> <dbl>
-    ## 1 pen1   13.9  14.2
-    ## 2 pen2   13.0  14.2
-    ## 3 pen3   15.0  14.2
-    ## 4 pen4   12.9  14.2
-    ## 5 pen5   14.5  14.2
-    ## 6 pen6   14.6  14.2
-    ## 7 pen7   15.1  14.2
 
 ``` r
 p_values <- 
@@ -789,18 +791,17 @@ ml_performance_RMSE <- penwise_age |>
 fdr_count |> ungroup() |>  
   left_join(ml_performance_RMSE) |> 
   select(pen, fdr = n, RMSE)
+## # A tibble: 7 × 3
+##   pen     fdr  RMSE
+##   <chr> <int> <dbl>
+## 1 pen1    122  13.8
+## 2 pen4    117  12.1
+## 3 pen5     68  14.6
+## 4 pen2     66  12.6
+## 5 pen3     64  15.1
+## 6 pen6     51  14.8
+## 7 pen7     44  15.1
 ```
-
-    ## # A tibble: 7 × 3
-    ##   pen     fdr  RMSE
-    ##   <chr> <int> <dbl>
-    ## 1 pen1    122  13.9
-    ## 2 pen4    117  12.9
-    ## 3 pen5     68  14.5
-    ## 4 pen2     66  13.0
-    ## 5 pen3     64  15.0
-    ## 6 pen6     51  14.6
-    ## 7 pen7     44  15.1
 
 ``` r
 features <- 
@@ -822,6 +823,7 @@ x |>
 ![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
+
 important_peaks <- 
   tibble(mass_preprocessed = as.numeric(gsub("M", "", features$name)), important = TRUE,
          fdr  = features$fdr)
