@@ -10,5 +10,18 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    cowplot,
     dplyr,
-    glmnet
+    ggplot2,
+    ggrepel,
+    glmnet,
+    magrittr,
+    MALDIquant,
+    MALDIquantForeign,
+    purrr,
+    tibble,
+    tidyr,
+    umap
+Depends: 
+    R (>= 2.10)
+RoxygenNote: 7.2.3
