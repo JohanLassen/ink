@@ -8,7 +8,21 @@ date: "2023-03-13"
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-```{r, message=FALSE, warning=FALSE}
+
+This package is the supporting code base and data for the publication **Statistical modelling investigation of MALDI MS based approaches for document examination**.
+
+By installing the package the pooled spectra are downloaded along with the code base. The README will take you through the statistical analysis performed in the paper.
+
+To cite the paper:
+DOI:
+
+Please install the package by running:
+```{r}
+
+```
+
+
+```{r}
 # Data wrangling packages
 library(tibble)
 library(tidyr)
