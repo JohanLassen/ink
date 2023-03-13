@@ -1,34 +1,20 @@
----
-title: "Statistical modelling investigation of MALDI MS based approaches for document examination"
-output: 
-  github_document:
-    toc: true
-    toc_depth: 2
-    fig_width: 5
-    fig_height: 5
-author: "Johan Lassen"
-date: "2023-03-13"
----
+Untitled
+================
+2023-03-13
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-```
+This package is the supporting code base and data for the publication
+**Statistical modelling investigation of MALDI MS based approaches for
+document examination**.
 
+By installing the package the pooled spectra are downloaded along with
+the code base. The README will take you through the statistical analysis
+performed in the paper.
 
-This package is the supporting code base and data for the publication **Statistical modelling investigation of MALDI MS based approaches for document examination**.
-
-By installing the package the pooled spectra are downloaded along with the code base. The README will take you through the statistical analysis performed in the paper.
-
-To cite the paper:
-DOI:
+To cite the paper: DOI:
 
 Please install the package by running:
-```{r}
 
-```
-
-
-```{r}
+``` r
 # Data wrangling packages
 library(tibble)
 library(tidyr)
@@ -52,9 +38,9 @@ library(ggrepel)
 library(ink)
 ```
 
-
 ### Peak calling of validation data and training data
-```{r, cache = TRUE}
+
+``` r
 # The two included datasets (msdata in maldiquant)
 data(training_data)
 data(validation_data)
@@ -79,9 +65,26 @@ colnames(intensity_data) <- paste0("M", round(as.numeric(colnames(intensity_data
 head(intensity_data)
 ```
 
+    ## # A tibble: 6 × 9,761
+    ##   M100.0978 M100.1042 M100.1086 M100.1…¹ M100.…² M101.…³ M101.…⁴ M102.…⁵ M102.…⁶
+    ##       <dbl>     <dbl>     <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ## 1      2.26      1.50      1.69     1.66    1.65   2.39    2.36     1.50    4.98
+    ## 2      2.35      2.20      2.11     1.57    1.88   1.73    1.72     1.88    3.92
+    ## 3      2.39      2.26      2.25     2.23    2.22   1.78    1.86     1.95    1.49
+    ## 4      2.42      2.15      1.90     1.75    1.74   0.669   0.546    1.94    2.07
+    ## 5      3.45      2.91      2.68     2.27    1.97   1.09    2.48     1.72    1.61
+    ## 6      1.02      1.09      1.14     1.51    2.12   1.66    1.41     2.29    4.72
+    ## # … with 9,752 more variables: M104.1195 <dbl>, M104.1263 <dbl>,
+    ## #   M104.1327 <dbl>, M104.1392 <dbl>, M104.1422 <dbl>, M105.0579 <dbl>,
+    ## #   M105.064 <dbl>, M105.0702 <dbl>, M105.096 <dbl>, M106.1034 <dbl>,
+    ## #   M106.1107 <dbl>, M106.1181 <dbl>, M107.0643 <dbl>, M107.0734 <dbl>,
+    ## #   M107.0807 <dbl>, M107.1027 <dbl>, M107.1103 <dbl>, M107.1134 <dbl>,
+    ## #   M107.1162 <dbl>, M107.1211 <dbl>, M109.0958 <dbl>, M109.117 <dbl>,
+    ## #   M109.1256 <dbl>, M110.0891 <dbl>, M110.1068 <dbl>, M110.1167 <dbl>, …
 
 ### Parse metadata retained in msdata filenames
-```{r}
+
+``` r
 inkdata <- 
   tibble(
     pen   = gsub(".*pen|_.*", "", names(msdata)),
@@ -112,10 +115,26 @@ inkdata <-
 head(inkdata)
 ```
 
-
+    ## # A tibble: 6 × 9,766
+    ##   pen   index rep     age type   M100.…¹ M100.…² M100.…³ M100.…⁴ M100.…⁵ M101.…⁶
+    ##   <chr> <chr> <chr> <dbl> <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ## 1 1     0     1        44 sample    2.26    1.50    1.69    1.66    1.65   2.39 
+    ## 2 1     0     2        44 sample    2.35    2.20    2.11    1.57    1.88   1.73 
+    ## 3 1     0     3        44 sample    2.39    2.26    2.25    2.23    2.22   1.78 
+    ## 4 1     1     1        41 sample    2.42    2.15    1.90    1.75    1.74   0.669
+    ## 5 1     1     2        41 sample    3.45    2.91    2.68    2.27    1.97   1.09 
+    ## 6 1     1     3        41 sample    1.02    1.09    1.14    1.51    2.12   1.66 
+    ## # … with 9,755 more variables: M101.0957 <dbl>, M102.0789 <dbl>,
+    ## #   M102.1139 <dbl>, M104.1195 <dbl>, M104.1263 <dbl>, M104.1327 <dbl>,
+    ## #   M104.1392 <dbl>, M104.1422 <dbl>, M105.0579 <dbl>, M105.064 <dbl>,
+    ## #   M105.0702 <dbl>, M105.096 <dbl>, M106.1034 <dbl>, M106.1107 <dbl>,
+    ## #   M106.1181 <dbl>, M107.0643 <dbl>, M107.0734 <dbl>, M107.0807 <dbl>,
+    ## #   M107.1027 <dbl>, M107.1103 <dbl>, M107.1134 <dbl>, M107.1162 <dbl>,
+    ## #   M107.1211 <dbl>, M109.0958 <dbl>, M109.117 <dbl>, M109.1256 <dbl>, …
 
 ### Visualize the raw data before normalizing it
-```{r}
+
+``` r
 pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
 age   <- inkdata |> filter(type %in% c("sample", "validation")) |> pull(age)
 x     <- inkdata |> filter(type %in% c("sample", "validation")) |> select(starts_with("M"))
@@ -128,11 +147,11 @@ um$layout |>
   geom_point()+
   scale_color_brewer(palette = "Set1")+
   theme_minimal()
-
 ```
 
-```{r}
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
+``` r
 # container to ease preprocessing
 ms <- list()
 ms$values  <- inkdata |> select(starts_with("M")) 
@@ -155,12 +174,11 @@ ms            <- ms |> transform_log() |> normalize_robust_row()
 inkdata2      <- ms |> bind_cols()
 ```
 
-
 # Visualize the spectra of the average sample
 
-
 Plotting the pooled spectra from the experiment across all time points
-```{r}
+
+``` r
 # Extract mass and intensity from the raw data
 df <- 
   msdata |> 
@@ -194,21 +212,22 @@ df2 <-
 )
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ## Visualize unsupervised machine learning
 
+First we’ll assign feature values to x, time points to age, and pen
+brand to pen.
 
-First we'll assign feature values to x, time points to age, and pen brand to pen. 
-```{r}
+``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
 age       <- inkdata2 |> filter(type == "sample") |> pull(age)
 x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
 ```
 
-
-
 ### Umap
-```{r}
+
+``` r
 um <- umap::umap(x)
 
 umap_plot <- 
@@ -229,9 +248,9 @@ umap_plot <-
     )
 ```
 
-
 ### PCA
-```{r}
+
+``` r
 pca <- prcomp(x)
 variance_explained <- summary(pca)$importance[2,1:2]
 variance_explained <- round(variance_explained, 3)*100
@@ -254,18 +273,21 @@ pca_plot <-
     )
 ```
 
- Combine the umap plot and the pca plot
-```{r}
+Combine the umap plot and the pca plot
+
+``` r
 legend             <- get_legend(pca_plot + ggplot2::theme(legend.box.margin = ggplot2::margin(0, 0, 0, 5)))
 unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_plot+theme(legend.position = "none"), ncol = 2)
 (unsupervised_plot2 <- plot_grid(unsupervised_plot, legend, rel_widths = c(8,1)))
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ## Visualize unsupervised age patterns
 
 ### Umap
-```{r}
+
+``` r
 um <- umap::umap(x)
 
 umap_plot <- 
@@ -286,9 +308,9 @@ umap_plot <-
     )
 ```
 
-
 ### PCA
-```{r}
+
+``` r
 pca <- prcomp(x)
 variance_explained <- summary(pca)$importance[2,1:2]
 variance_explained <- round(variance_explained, 3)*100
@@ -312,17 +334,21 @@ pca_plot <-
 )
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
 Combined unsupervised age plot
-```{r}
+
+``` r
 legend             <- get_legend(pca_plot + ggplot2::theme(legend.box.margin = margin(0, 0, 0, 5)))
 unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_plot+theme(legend.position = "none"), ncol = 2)
 (unsupervised_plot2 <- plot_grid(unsupervised_plot, legend, rel_widths = c(8,1)))
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 # Supervised machine learning
 
-```{r}
+``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
 age       <- inkdata2 |> filter(type == "sample") |> pull(age)
 x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
@@ -330,17 +356,15 @@ val_data  <- inkdata2 |> filter(type == "validation") |> select(starts_with("M")
 signature <- inkdata2 |> filter(type == "validation") |> select(-starts_with("M")) |> pull(index)
 ```
 
-
 ### Ink discrimination Model!
 
-Obtain:
-- cross validated hold out class predictions (variable: preds)
-- cross validated hold out class probabilities (variable: preds)
-- for each fold predict (1 and 2) for the validation data (to average in the end)
-- get the cross validated feature impact on the observations. I.e., how much does feature X influence the prediction of a given sample.
+Obtain: - cross validated hold out class predictions (variable: preds) -
+cross validated hold out class probabilities (variable: preds) - for
+each fold predict (1 and 2) for the validation data (to average in the
+end) - get the cross validated feature impact on the observations. I.e.,
+how much does feature X influence the prediction of a given sample.
 
-```{r, cache = TRUE}
-
+``` r
 preds                  <- list()
 shap_impact_all        <- list()
 signature_preds        <- list()
@@ -434,14 +458,11 @@ for (i in 1:length(unique(age))){
 
 # Concatenate all the feature importance data
 feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M")) |> map_dbl(var, na.rm=T) |> sort(decreasing = T)
-
 ```
-
-
 
 ### Machine learning performance
 
-```{r}
+``` r
 (
   predictional_performance <-
     preds |> 
@@ -466,11 +487,11 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 )
 ```
 
-
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ### Predictions on validation data
 
-```{r}
+``` r
 signature <- inkdata2 |> filter(type == "validation") |> pull(index)
 mean_prediction <- 
   signature_preds |> 
@@ -505,17 +526,24 @@ blinded_predictions <-
           legend.title = element_text(size=8),
           legend.text = element_text(size=8))
 )
-
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ### Assessment of the predictions - do they fit into the distributions of the training data?
 
-> We are especially interested in signature 4 as it is uncertain in its "john" predictions
+> We are especially interested in signature 4 as it is uncertain in its
+> “john” predictions
 
-The values on y are the beta values of the linear model multiplied onto the intensity of their variable (feature). I.e., if we have a model with only one predictor the linear model would be: y = a*x + b. In this case the value on the y-value on the plot would be given by a multiplied by x.
+The values on y are the beta values of the linear model multiplied onto
+the intensity of their variable (feature). I.e., if we have a model with
+only one predictor the linear model would be: y = a\*x + b. In this case
+the value on the y-value on the plot would be given by a multiplied by
+x.
 
 ### assessment of all predictions - filled by
-```{r}
+
+``` r
 n = 10
 validation_shap <- 
   shap_impact_signatures |> 
@@ -562,13 +590,15 @@ true_preds <-
     axis.title = element_text(size=8), 
     axis.text = element_text(size=8))
   )
-
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 > NOTICE: At this point we do not know if the predictions are correct.
 
 # All pen regressions
-```{r}
+
+``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
 age       <- inkdata2 |> filter(type == "sample") |> pull(age)
 x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
@@ -614,14 +644,13 @@ preds2 <-
       plot.subtitle = element_text(size=8)
     )
 )
-
 ```
 
-
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ### Model age!
-```{r}
 
+``` r
 penwise_age <- list()
 for (pen_id in unique(pen)){
   
@@ -658,7 +687,6 @@ for (pen_id in unique(pen)){
       mutate(s1 = as.numeric(s1)) |>
       pivot_wider(names_from = feature, values_from=s1) |>
       as.matrix()
-
 
     used_features <- feature_importance |> bind_rows() |> pull(feature) |> unique()
 
@@ -701,11 +729,9 @@ for (pen_id in unique(pen)){
          )
 
 }
-
 ```
 
-
-```{r}
+``` r
 get_regression_preds <- function(x) {
   x[["predictions"]] |> 
     bind_rows() |> 
@@ -718,10 +744,20 @@ penwise_age |>
   group_by(pen) |> 
   summarise(RMSE = sqrt(mean((pred-obs)^2)),
             sd   = sd(obs))
-
 ```
 
-```{r}
+    ## # A tibble: 7 × 3
+    ##   pen    RMSE    sd
+    ##   <chr> <dbl> <dbl>
+    ## 1 pen1   13.9  14.2
+    ## 2 pen2   12.6  14.2
+    ## 3 pen3   14.9  14.2
+    ## 4 pen4   12.5  14.2
+    ## 5 pen5   14.5  14.2
+    ## 6 pen6   15.0  14.2
+    ## 7 pen7   15.1  14.2
+
+``` r
 p_values <- 
   x |>
   mutate(age = age, pen = pen) |> 
@@ -752,8 +788,18 @@ fdr_count |> ungroup() |>
   select(pen, fdr = n, RMSE)
 ```
 
+    ## # A tibble: 7 × 3
+    ##   pen     fdr  RMSE
+    ##   <chr> <int> <dbl>
+    ## 1 pen1    122  13.9
+    ## 2 pen4    117  12.5
+    ## 3 pen5     68  14.5
+    ## 4 pen2     66  12.6
+    ## 5 pen3     64  14.9
+    ## 6 pen6     51  15.0
+    ## 7 pen7     44  15.1
 
-```{r}
+``` r
 features <- 
   p_values |> 
   filter(pen=="pen1") |> 
@@ -768,7 +814,11 @@ x |>
   geom_smooth(method = "lm", se = F, color  = "gray50")+
   geom_point()+
   facet_wrap(~name)
+```
 
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+``` r
 important_peaks <- 
   tibble(mass_preprocessed = as.numeric(gsub("M", "", features$name)), important = TRUE,
          fdr  = features$fdr)
@@ -834,8 +884,9 @@ raw_data_significant_peaks <-
 )
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-24-2.png)<!-- -->
 
-```{r}
+``` r
 (figureS3_aging_sanity_check <- x[pen == "pen1",] |> 
   rowSums() |> 
   as_tibble() |> 
@@ -845,9 +896,11 @@ raw_data_significant_peaks <-
 )
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
-#### The pen with the most correlated features is pen1. Let's do a PCA
-```{r}
+#### The pen with the most correlated features is pen1. Let’s do a PCA
+
+``` r
 pen1 <- 
   x |> 
   mutate(age=age, pen=pen) |> 
@@ -859,8 +912,7 @@ ms$rowinfo    <- pen1 |> select(days = age, pen) |> rowid_to_column()
 pca_plot_pen1 <- plot_pca(ms, color_label="days", palette = "YlGnBu", tech_rep = "days")
 ```
 
-
-```{r}
+``` r
 dense_data <- x[pen == "pen1", "M194.1497"]
 dense_data$age <- age[pen == "pen1"]
 
@@ -885,10 +937,11 @@ polymer_plot <-
 plot_grid(pca_plot_pen1+theme(plot.margin = margin(0,0,20,0)), polymer_plot, ncol = 1, labels = c("(a)", ""), label_fontface = "plain", label_size = 10)
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ###### Well.. lets do it for all pens
 
-```{r}
+``` r
 pen_plots <- list()
 
 for (pen_id in unique(pen)){
@@ -909,3 +962,5 @@ for (pen_id in unique(pen)){
 
 (all_pca_plots <- cowplot::plot_grid(plotlist = pen_plots, labels = names(pen_plots), label_size = 8, label_fontface = "plain", ncol = 1))
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
