@@ -97,7 +97,7 @@ normalize_robust_row <- function(ms) {
 #' @param color_label the label used for colouring the data points
 #' @param palette fx Spectral, Set1, Set2, Set3, Set4, 1, 2, 3, 4 etc.
 #' @param tech_rep the column name of the technical replicates
-#'
+#' @import ggplot2 cowplot tibble dplyr
 #' @return a pca plot using the first 6 components
 #' @export
 plot_pca <- function(ms, color_label="rowid", palette = "Spectral", tech_rep = "rowid") {
@@ -149,9 +149,9 @@ plot_pca <- function(ms, color_label="rowid", palette = "Spectral", tech_rep = "
         ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(size = 2)))
 
       if (!is.numeric(ms$rowinfo[[color_label]])){
-        p1 <- p1+scale_fill_brewer(palette = palette)
+        p1 <- p1+ggplot2::scale_fill_brewer(palette = palette)
       } else{
-        p1 <- p1+scale_fill_distiller(palette = palette)
+        p1 <- p1+ggplot2::scale_fill_distiller(palette = palette)
       }
       legend <- cowplot::get_legend(p1 + ggplot2::theme(legend.box.margin = ggplot2::margin(0, 0, 0, 0)))
     }
