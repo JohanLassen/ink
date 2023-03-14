@@ -4,19 +4,49 @@ document examination
 Johan Lassen
 2023-03-13
 
-- <a href="#1-visualize-the-spectra-of-the-average-sample"
-  id="toc-1-visualize-the-spectra-of-the-average-sample">1 Visualize the
-  spectra of the average sample</a>
-  - <a href="#11-visualize-unsupervised-machine-learning"
-    id="toc-11-visualize-unsupervised-machine-learning">1.1 Visualize
-    unsupervised machine learning</a>
-  - <a href="#12-visualize-unsupervised-age-patterns"
-    id="toc-12-visualize-unsupervised-age-patterns">1.2 Visualize
-    unsupervised age patterns</a>
-- <a href="#2-supervised-machine-learning"
-  id="toc-2-supervised-machine-learning">2 Supervised machine learning</a>
-- <a href="#3-all-pen-regressions" id="toc-3-all-pen-regressions">3 All
+- <a href="#1-introduction" id="toc-1-introduction">1 Introduction</a>
+- <a href="#2-preprocessing" id="toc-2-preprocessing">2 Preprocessing</a>
+  - <a href="#21-peak-calling" id="toc-21-peak-calling">2.1 Peak Calling</a>
+  - <a href="#22-parse-metadata" id="toc-22-parse-metadata">2.2 Parse
+    metadata</a>
+  - <a href="#23-visualize-the-raw-data-before-normalization"
+    id="toc-23-visualize-the-raw-data-before-normalization">2.3 Visualize
+    the raw data before normalization</a>
+  - <a href="#24-normalization-and-data-cleaning"
+    id="toc-24-normalization-and-data-cleaning">2.4 Normalization and data
+    cleaning</a>
+  - <a href="#25-visualize-the-spectra-of-the-average-sample"
+    id="toc-25-visualize-the-spectra-of-the-average-sample">2.5 Visualize
+    the spectra of the average sample</a>
+- <a href="#3-unsupervised-machine-learning"
+  id="toc-3-unsupervised-machine-learning">3 Unsupervised Machine
+  Learning</a>
+  - <a href="#31-define-data-used-for-the-algorithms"
+    id="toc-31-define-data-used-for-the-algorithms">3.1 Define data used for
+    the algorithms</a>
+  - <a href="#32-colored-by-pen-brand" id="toc-32-colored-by-pen-brand">3.2
+    Colored by pen brand</a>
+  - <a href="#33-colored-by-time-since-deposition"
+    id="toc-33-colored-by-time-since-deposition">3.3 Colored by time since
+    deposition</a>
+- <a href="#4-supervised-machine-learning-of-ink-discrimination"
+  id="toc-4-supervised-machine-learning-of-ink-discrimination">4
+  Supervised Machine Learning of Ink Discrimination</a>
+  - <a href="#41-define-data-again-for-the-analysis"
+    id="toc-41-define-data-again-for-the-analysis">4.1 Define data (again)
+    for the analysis</a>
+  - <a href="#42-ink-discrimination-model"
+    id="toc-42-ink-discrimination-model">4.2 Ink Discrimination Model</a>
+  - <a href="#43-ink-discrimination-performance"
+    id="toc-43-ink-discrimination-performance">4.3 Ink Discrimination
+    Performance</a>
+  - <a href="#44-validation-data-predictions"
+    id="toc-44-validation-data-predictions">4.4 Validation Data
+    Predictions</a>
+- <a href="#5-all-pen-regressions" id="toc-5-all-pen-regressions">5 All
   pen regressions</a>
+
+# 1 Introduction
 
 This package is the supporting code base and data for the publication
 **Statistical modelling investigation of MALDI MS based approaches for
@@ -28,7 +58,19 @@ performed in the paper.
 
 To cite the paper: DOI:
 
-Please install the package by running:
+Please install the package (and download the data) by running:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("johanLassen/ink")
+```
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 # Data wrangling packages
@@ -55,7 +97,21 @@ library(knitr)
 library(ink)
 ```
 
-### 0.0.1 Peak calling of validation data and training data
+</details>
+
+# 2 Preprocessing
+
+## 2.1 Peak Calling
+
+We peak call the training data and validation data simultaneously to
+ensure both datasets have the same peaks
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 # The two included datasets (msdata in maldiquant)
@@ -84,6 +140,8 @@ colnames(intensity_data) <- paste0("M", round(as.numeric(colnames(intensity_data
 head(intensity_data)[,1:10] |> knitr::kable()
 ```
 
+</details>
+
 | M100.0978 | M100.1042 | M100.1086 | M100.1359 | M100.1558 | M101.0174 | M101.0957 | M102.0789 | M102.1139 | M104.1195 |
 |----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|
 |  2.256795 |  1.501278 |  1.685417 |  1.664774 |  1.649710 | 2.3867975 | 2.3582668 |  1.499466 |  4.984403 |  3.428293 |
@@ -93,7 +151,17 @@ head(intensity_data)[,1:10] |> knitr::kable()
 |  3.445834 |  2.914731 |  2.678153 |  2.271718 |  1.973973 | 1.0923073 | 2.4772140 |  1.720487 |  1.605792 |  2.135995 |
 |  1.024238 |  1.091803 |  1.137488 |  1.514281 |  2.123404 | 1.6620962 | 1.4085513 |  2.291243 |  4.715526 |  2.396093 |
 
-### 0.0.2 Parse metadata retained in msdata filenames
+## 2.2 Parse metadata
+
+The filenames and the chunk below contain the information needed for the
+analysis.  
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 inkdata <- 
@@ -126,6 +194,8 @@ inkdata <-
 head(inkdata)[,1:10] |> knitr::kable()
 ```
 
+</details>
+
 | pen | index | rep | age | type   | M100.0978 | M100.1042 | M100.1086 | M100.1359 | M100.1558 |
 |:----|:------|:----|----:|:-------|----------:|----------:|----------:|----------:|----------:|
 | 1   | 0     | 1   |  44 | sample |  2.256795 |  1.501278 |  1.685417 |  1.664774 |  1.649710 |
@@ -135,7 +205,14 @@ head(inkdata)[,1:10] |> knitr::kable()
 | 1   | 1     | 2   |  41 | sample |  3.445834 |  2.914731 |  2.678153 |  2.271718 |  1.973973 |
 | 1   | 1     | 3   |  41 | sample |  1.024238 |  1.091803 |  1.137488 |  1.514281 |  2.123404 |
 
-### 0.0.3 Visualize the raw data before normalizing it
+## 2.3 Visualize the raw data before normalization
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
@@ -152,7 +229,18 @@ um$layout |>
   theme_minimal()
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+</details>
+
+<img src="README_files/figure-gfm/umap raw data visualization-1.png" style="display: block; margin: auto;" />
+
+## 2.4 Normalization and data cleaning
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 
@@ -178,9 +266,18 @@ ms            <- ms |> transform_log() |> normalize_robust_row()
 inkdata2      <- ms |> bind_cols()
 ```
 
-# 1 Visualize the spectra of the average sample
+</details>
+
+## 2.5 Visualize the spectra of the average sample
 
 Plotting the pooled spectra from the experiment across all time points
+
+<details>
+<summary>
+
+source
+
+</summary>
 
 ``` r
 # Extract mass and intensity from the raw data
@@ -216,12 +313,23 @@ df2 <-
 )
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+</details>
 
-## 1.1 Visualize unsupervised machine learning
+<img src="README_files/figure-gfm/plot spectra-1.png" style="display: block; margin: auto;" />
+
+# 3 Unsupervised Machine Learning
+
+## 3.1 Define data used for the algorithms
 
 First we’ll assign feature values to x, time points to age, and pen
 brand to pen.
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -229,7 +337,18 @@ age       <- inkdata2 |> filter(type == "sample") |> pull(age)
 x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
 ```
 
-### 1.1.1 Umap
+</details>
+
+## 3.2 Colored by pen brand
+
+### 3.2.1 Umap
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 um <- umap::umap(x)
@@ -252,7 +371,16 @@ umap_plot <-
     )
 ```
 
-### 1.1.2 PCA
+</details>
+
+### 3.2.2 PCA
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pca <- prcomp(x)
@@ -277,7 +405,16 @@ pca_plot <-
     )
 ```
 
+</details>
+
 Combine the umap plot and the pca plot
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 legend             <- get_legend(pca_plot + ggplot2::theme(legend.box.margin = ggplot2::margin(0, 0, 0, 5)))
@@ -285,11 +422,20 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 (unsupervised_plot2 <- plot_grid(unsupervised_plot, legend, rel_widths = c(8,1)))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+</details>
 
-## 1.2 Visualize unsupervised age patterns
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
-### 1.2.1 Umap
+## 3.3 Colored by time since deposition
+
+### 3.3.1 Umap
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 um <- umap::umap(x)
@@ -312,13 +458,21 @@ umap_plot <-
     )
 ```
 
-### 1.2.2 PCA
+</details>
+
+### 3.3.2 PCA
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pca <- prcomp(x)
 variance_explained <- summary(pca)$importance[2,1:2]
 variance_explained <- round(variance_explained, 3)*100
-(
 pca_plot <- 
   pca$x |> 
   as_tibble() |> 
@@ -335,12 +489,18 @@ pca_plot <-
       legend.text = element_text(size=8),
       legend.title = element_text(size=8)
     )
-)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+</details>
 
 Combined unsupervised age plot
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 legend             <- get_legend(pca_plot + ggplot2::theme(legend.box.margin = margin(0, 0, 0, 5)))
@@ -348,9 +508,20 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 (unsupervised_plot2 <- plot_grid(unsupervised_plot, legend, rel_widths = c(8,1)))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+</details>
 
-# 2 Supervised machine learning
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+# 4 Supervised Machine Learning of Ink Discrimination
+
+## 4.1 Define data (again) for the analysis
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -360,13 +531,23 @@ val_data  <- inkdata2 |> filter(type == "validation") |> select(starts_with("M")
 signature <- inkdata2 |> filter(type == "validation") |> select(-starts_with("M")) |> pull(index)
 ```
 
-### 2.0.1 Ink discrimination Model!
+</details>
 
-Obtain: - cross validated hold out class predictions (variable: preds) -
-cross validated hold out class probabilities (variable: preds) - for
-each fold predict (1 and 2) for the validation data (to average in the
-end) - get the cross validated feature impact on the observations. I.e.,
-how much does feature X influence the prediction of a given sample.
+## 4.2 Ink Discrimination Model
+
+We run the cross-validation for loop to obtain: 1. Cross validated hold
+out class predictions (variable: preds) 2. Cross validated hold out
+class probabilities (variable: preds) 3. For each fold predict (1 and 2)
+for the validation data (to average in the end) 4. Get the cross
+validated feature impact on the observations. I.e., how much does
+feature X influence the prediction of a given sample.
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 
@@ -465,7 +646,16 @@ for (i in 1:length(unique(age))){
 feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M")) |> map_dbl(var, na.rm=T) |> sort(decreasing = T)
 ```
 
-### 2.0.2 Machine learning performance
+</details>
+
+## 4.3 Ink Discrimination Performance
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 (
@@ -492,9 +682,18 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+</details>
 
-### 2.0.3 Predictions on validation data
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+## 4.4 Validation Data Predictions
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 signature <- inkdata2 |> filter(type == "validation") |> pull(index)
@@ -533,9 +732,11 @@ blinded_predictions <-
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+</details>
 
-### 2.0.4 Assessment of the predictions - do they fit into the distributions of the training data?
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+### 4.4.1 Assessment of the predictions - do they fit into the distributions of the training data?
 
 > We are especially interested in signature 4 as it is uncertain in its
 > “john” predictions
@@ -546,7 +747,14 @@ only one predictor the linear model would be: y = a\*x + b. In this case
 the value on the y-value on the plot would be given by a multiplied by
 x.
 
-### 2.0.5 assessment of all predictions - filled by
+### 4.4.2 assessment of all predictions - filled by
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 n = 10
@@ -597,11 +805,20 @@ true_preds <-
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+</details>
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 > NOTICE: At this point we do not know if the predictions are correct.
 
-# 3 All pen regressions
+# 5 All pen regressions
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -651,9 +868,18 @@ preds2 <-
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+</details>
 
-### 3.0.1 Model age!
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+### 5.0.1 Model age!
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 
@@ -737,6 +963,14 @@ for (pen_id in unique(pen)){
 }
 ```
 
+</details>
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
+
 ``` r
 get_regression_preds <- function(x) {
   x[["predictions"]] |> 
@@ -750,17 +984,27 @@ penwise_age |>
   group_by(pen) |> 
   summarise(RMSE = sqrt(mean((pred-obs)^2)),
             sd   = sd(obs))
-## # A tibble: 7 × 3
-##   pen    RMSE    sd
-##   <chr> <dbl> <dbl>
-## 1 pen1   13.8  14.2
-## 2 pen2   12.6  14.2
-## 3 pen3   15.1  14.2
-## 4 pen4   12.1  14.2
-## 5 pen5   14.6  14.2
-## 6 pen6   14.8  14.2
-## 7 pen7   15.1  14.2
 ```
+
+</details>
+
+    ## # A tibble: 7 × 3
+    ##   pen    RMSE    sd
+    ##   <chr> <dbl> <dbl>
+    ## 1 pen1   13.6  14.2
+    ## 2 pen2   12.9  14.2
+    ## 3 pen3   15.1  14.2
+    ## 4 pen4   12.7  14.2
+    ## 5 pen5   14.9  14.2
+    ## 6 pen6   15.2  14.2
+    ## 7 pen7   15.0  14.2
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 p_values <- 
@@ -791,17 +1035,27 @@ ml_performance_RMSE <- penwise_age |>
 fdr_count |> ungroup() |>  
   left_join(ml_performance_RMSE) |> 
   select(pen, fdr = n, RMSE)
-## # A tibble: 7 × 3
-##   pen     fdr  RMSE
-##   <chr> <int> <dbl>
-## 1 pen1    122  13.8
-## 2 pen4    117  12.1
-## 3 pen5     68  14.6
-## 4 pen2     66  12.6
-## 5 pen3     64  15.1
-## 6 pen6     51  14.8
-## 7 pen7     44  15.1
 ```
+
+</details>
+
+    ## # A tibble: 7 × 3
+    ##   pen     fdr  RMSE
+    ##   <chr> <int> <dbl>
+    ## 1 pen1    122  13.6
+    ## 2 pen4    117  12.7
+    ## 3 pen5     68  14.9
+    ## 4 pen2     66  12.9
+    ## 5 pen3     64  15.1
+    ## 6 pen6     51  15.2
+    ## 7 pen7     44  15.0
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 features <- 
@@ -820,7 +1074,16 @@ x |>
   facet_wrap(~name)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+</details>
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 
@@ -889,7 +1152,16 @@ raw_data_significant_peaks <-
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-2.png)<!-- -->
+</details>
+
+![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 (figureS3_aging_sanity_check <- x[pen == "pen1",] |> 
@@ -901,9 +1173,18 @@ raw_data_significant_peaks <-
 )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+</details>
 
-#### 3.0.1.1 The pen with the most correlated features is pen1. Let’s do a PCA
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+#### 5.0.1.1 The pen with the most correlated features is pen1. Let’s do a PCA
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen1 <- 
@@ -916,6 +1197,14 @@ ms$values     <- pen1 |> select(-age) |> select(-pen)
 ms$rowinfo    <- pen1 |> select(days = age, pen) |> rowid_to_column()
 pca_plot_pen1 <- plot_pca(ms, color_label="days", palette = "YlGnBu", tech_rep = "days")
 ```
+
+</details>
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 dense_data <- x[pen == "pen1", "M194.1497"]
@@ -942,9 +1231,18 @@ polymer_plot <-
 plot_grid(pca_plot_pen1+theme(plot.margin = margin(0,0,20,0)), polymer_plot, ncol = 1, labels = c("(a)", ""), label_fontface = "plain", label_size = 10)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+</details>
 
-###### 3.0.1.1.0.1 Well.. lets do it for all pens
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+###### 5.0.1.1.0.1 Well.. lets do it for all pens
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
 
 ``` r
 pen_plots <- list()
@@ -968,4 +1266,6 @@ for (pen_id in unique(pen)){
 (all_pca_plots <- cowplot::plot_grid(plotlist = pen_plots, labels = names(pen_plots), label_size = 8, label_fontface = "plain", ncol = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+</details>
+
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->

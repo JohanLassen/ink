@@ -4,7 +4,6 @@ output:
   github_document:
     toc: true
     toc_depth: 2
-    colla
     number_sections: true
     fig_width: 5
     fig_height: 5
@@ -13,9 +12,32 @@ date: "2023-03-13"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = TRUE, fig.width = 8, fig.height = 4)
+
+
+hooks = knitr::knit_hooks$get()
+hook_foldable = function(type) {
+  force(type)
+  function(x, options) {
+    res = hooks[[type]](x, options)
+
+    if (isFALSE(options[[paste0("fold.", type)]])) return(res)
+
+    paste0(
+      "<details style='display:inline'><summary>", "Show Code", "</summary>\n\n",
+      res,
+      "\n\n</details>"
+    )
+  }
+}
+knitr::knit_hooks$set(
+  #output = hook_foldable("output"),
+  source = hook_foldable("source")
+)
 ```
 
+
+# Introduction
 
 This package is the supporting code base and data for the publication **Statistical modelling investigation of MALDI MS based approaches for document examination**.
 
@@ -24,9 +46,10 @@ By installing the package the pooled spectra are downloaded along with the code 
 To cite the paper:
 DOI:
 
-Please install the package by running:
-```{r}
-
+Please install the package (and download the data) by running:
+``` r
+# install.packages("devtools")
+devtools::install_github("johanLassen/ink")
 ```
 
 
@@ -56,8 +79,12 @@ library(ink)
 ```
 
 
-### Peak calling of validation data and training data
-```{r, cache = TRUE}
+# Preprocessing
+
+## Peak Calling
+
+We peak call the training data and validation data simultaneously to ensure both datasets have the same peaks
+```{r preprocess data, cache = TRUE}
 # The two included datasets (msdata in maldiquant)
 data(training_data)
 data(validation_data)
@@ -86,8 +113,10 @@ head(intensity_data)[,1:10] |> knitr::kable()
 ```
 
 
-### Parse metadata retained in msdata filenames
-```{r}
+## Parse metadata
+
+The filenames and the chunk below contain the information needed for the analysis.  
+```{r wrangle processed data}
 inkdata <- 
   tibble(
     pen   = gsub(".*pen|_.*", "", names(msdata)),
@@ -120,8 +149,8 @@ head(inkdata)[,1:10] |> knitr::kable()
 
 
 
-### Visualize the raw data before normalizing it
-```{r, fig.align='center'}
+## Visualize the raw data before normalization
+```{r umap raw data visualization, fig.align='center'}
 pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
 age   <- inkdata |> filter(type %in% c("sample", "validation")) |> pull(age)
 x     <- inkdata |> filter(type %in% c("sample", "validation")) |> select(starts_with("M"))
@@ -137,7 +166,9 @@ um$layout |>
 
 ```
 
-```{r}
+
+## Normalization and data cleaning
+```{r normalization}
 
 # container to ease preprocessing
 ms <- list()
@@ -162,11 +193,11 @@ inkdata2      <- ms |> bind_cols()
 ```
 
 
-# Visualize the spectra of the average sample
+## Visualize the spectra of the average sample
 
 
 Plotting the pooled spectra from the experiment across all time points
-```{r, fig.align='center', fig.height=50, fig.width=10}
+```{r plot spectra, fig.align='center', fig.height=12, fig.width=8, cache = TRUE}
 # Extract mass and intensity from the raw data
 df <- 
   msdata |> 
@@ -201,9 +232,9 @@ df2 <-
 ```
 
 
-## Visualize unsupervised machine learning
+# Unsupervised Machine Learning
 
-
+## Define data used for the algorithms
 First we'll assign feature values to x, time points to age, and pen brand to pen. 
 ```{r}
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
@@ -212,7 +243,7 @@ x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
 ```
 
 
-
+## Colored by pen brand
 ### Umap
 ```{r}
 um <- umap::umap(x)
@@ -261,14 +292,14 @@ pca_plot <-
 ```
 
  Combine the umap plot and the pca plot
-```{r}
+```{r, fig.align='center', fig.height=4}
 legend             <- get_legend(pca_plot + ggplot2::theme(legend.box.margin = ggplot2::margin(0, 0, 0, 5)))
 unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_plot+theme(legend.position = "none"), ncol = 2)
 (unsupervised_plot2 <- plot_grid(unsupervised_plot, legend, rel_widths = c(8,1)))
 ```
 
 
-## Visualize unsupervised age patterns
+## Colored by time since deposition
 
 ### Umap
 ```{r}
@@ -298,7 +329,6 @@ umap_plot <-
 pca <- prcomp(x)
 variance_explained <- summary(pca)$importance[2,1:2]
 variance_explained <- round(variance_explained, 3)*100
-(
 pca_plot <- 
   pca$x |> 
   as_tibble() |> 
@@ -315,7 +345,6 @@ pca_plot <-
       legend.text = element_text(size=8),
       legend.title = element_text(size=8)
     )
-)
 ```
 
 Combined unsupervised age plot
@@ -326,8 +355,9 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 ```
 
 
-# Supervised machine learning
+# Supervised Machine Learning of Ink Discrimination
 
+## Define data (again) for the analysis
 ```{r}
 pen       <- paste0("pen", inkdata2 |> filter(type == "sample") |> pull(pen))
 age       <- inkdata2 |> filter(type == "sample") |> pull(age)
@@ -337,13 +367,13 @@ signature <- inkdata2 |> filter(type == "validation") |> select(-starts_with("M"
 ```
 
 
-### Ink discrimination Model!
+## Ink Discrimination Model
 
-Obtain:
-- cross validated hold out class predictions (variable: preds)
-- cross validated hold out class probabilities (variable: preds)
-- for each fold predict (1 and 2) for the validation data (to average in the end)
-- get the cross validated feature impact on the observations. I.e., how much does feature X influence the prediction of a given sample.
+We run the cross-validation for loop to obtain:
+1. Cross validated hold out class predictions (variable: preds)
+2. Cross validated hold out class probabilities (variable: preds)
+3. For each fold predict (1 and 2) for the validation data (to average in the end)
+4. Get the cross validated feature impact on the observations. I.e., how much does feature X influence the prediction of a given sample.
 
 ```{r, cache = TRUE}
 
@@ -445,7 +475,7 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 
 
 
-### Machine learning performance
+## Ink Discrimination Performance
 
 ```{r}
 (
@@ -474,7 +504,7 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 
 
 
-### Predictions on validation data
+## Validation Data Predictions
 
 ```{r}
 signature <- inkdata2 |> filter(type == "validation") |> pull(index)
