@@ -9,42 +9,47 @@ Johan Lassen
   - <a href="#21-peak-calling" id="toc-21-peak-calling">2.1 Peak Calling</a>
   - <a href="#22-parse-metadata" id="toc-22-parse-metadata">2.2 Parse
     metadata</a>
-  - <a href="#23-visualize-the-raw-data-before-normalization"
-    id="toc-23-visualize-the-raw-data-before-normalization">2.3 Visualize
-    the raw data before normalization</a>
-  - <a href="#24-normalization-and-data-cleaning"
-    id="toc-24-normalization-and-data-cleaning">2.4 Normalization and data
+  - <a href="#23-normalization-and-data-cleaning"
+    id="toc-23-normalization-and-data-cleaning">2.3 Normalization and data
     cleaning</a>
-  - <a href="#25-visualize-the-spectra-of-the-average-sample"
-    id="toc-25-visualize-the-spectra-of-the-average-sample">2.5 Visualize
+  - <a href="#24-visualize-the-spectra-of-the-average-sample"
+    id="toc-24-visualize-the-spectra-of-the-average-sample">2.4 Visualize
     the spectra of the average sample</a>
 - <a href="#3-unsupervised-machine-learning"
   id="toc-3-unsupervised-machine-learning">3 Unsupervised Machine
   Learning</a>
-  - <a href="#31-define-data-used-for-the-algorithms"
-    id="toc-31-define-data-used-for-the-algorithms">3.1 Define data used for
-    the algorithms</a>
-  - <a href="#32-colored-by-pen-brand" id="toc-32-colored-by-pen-brand">3.2
+  - <a href="#31-colored-by-pen-brand" id="toc-31-colored-by-pen-brand">3.1
     Colored by pen brand</a>
-  - <a href="#33-colored-by-time-since-deposition"
-    id="toc-33-colored-by-time-since-deposition">3.3 Colored by time since
+  - <a href="#32-colored-by-time-since-deposition"
+    id="toc-32-colored-by-time-since-deposition">3.2 Colored by time since
     deposition</a>
 - <a href="#4-supervised-machine-learning-of-ink-discrimination"
   id="toc-4-supervised-machine-learning-of-ink-discrimination">4
   Supervised Machine Learning of Ink Discrimination</a>
-  - <a href="#41-define-data-again-for-the-analysis"
-    id="toc-41-define-data-again-for-the-analysis">4.1 Define data (again)
-    for the analysis</a>
-  - <a href="#42-ink-discrimination-model"
-    id="toc-42-ink-discrimination-model">4.2 Ink Discrimination Model</a>
-  - <a href="#43-ink-discrimination-performance"
-    id="toc-43-ink-discrimination-performance">4.3 Ink Discrimination
+  - <a href="#41-ink-discrimination-model"
+    id="toc-41-ink-discrimination-model">4.1 Ink Discrimination Model</a>
+  - <a href="#42-ink-discrimination-performance"
+    id="toc-42-ink-discrimination-performance">4.2 Ink Discrimination
     Performance</a>
-  - <a href="#44-validation-data-predictions"
-    id="toc-44-validation-data-predictions">4.4 Validation Data
+  - <a href="#43-validation-data-predictions"
+    id="toc-43-validation-data-predictions">4.3 Validation Data
     Predictions</a>
-- <a href="#5-all-pen-regressions" id="toc-5-all-pen-regressions">5 All
-  pen regressions</a>
+- <a href="#5-supervised-learning-of-pen-age"
+  id="toc-5-supervised-learning-of-pen-age">5 Supervised learning of pen
+  age</a>
+  - <a href="#51-model-of-all-pens-together"
+    id="toc-51-model-of-all-pens-together">5.1 Model of all pens
+    together</a>
+  - <a href="#52-model-age-of-ink-in-individual-pens"
+    id="toc-52-model-age-of-ink-in-individual-pens">5.2 Model age of ink in
+    individual pens</a>
+  - <a href="#53-univariate-analysis-of-age-correlated-features-in-each-pen"
+    id="toc-53-univariate-analysis-of-age-correlated-features-in-each-pen">5.3
+    Univariate analysis of age correlated features in each pen</a>
+  - <a
+    href="#54-principal-component-analysis-of-linear-trends-in-aging-ink-pen-1"
+    id="toc-54-principal-component-analysis-of-linear-trends-in-aging-ink-pen-1">5.4
+    Principal component analysis of linear trends in aging ink (pen 1)</a>
 
 # 1 Introduction
 
@@ -104,7 +109,7 @@ library(ink)
 ## 2.1 Peak Calling
 
 We peak call the training data and validation data simultaneously to
-ensure both datasets have the same peaks
+ensure both data sets have the same peaks
 
 <details style="display:inline">
 <summary>
@@ -117,6 +122,14 @@ Show Code
 # The two included datasets (msdata in maldiquant)
 data(training_data)
 data(validation_data)
+# a <-
+#   gsub("signature", "", names(validation_data)) |>
+#   stringr::str_split("_") |>
+#   map_chr(~paste0("signature", as.numeric(.x[1])-2, "_", .x[2], "_", .x[3]))
+# 
+# names(validation_data) <- a
+# 
+# usethis::use_data(validation_data, overwrite = T)
 
 # Concatenate data to one list
 msdata <- c(training_data, validation_data)
@@ -205,35 +218,7 @@ head(inkdata)[,1:10] |> knitr::kable()
 | 1   | 1     | 2   |  41 | sample |  3.445834 |  2.914731 |  2.678153 |  2.271718 |  1.973973 |
 | 1   | 1     | 3   |  41 | sample |  1.024238 |  1.091803 |  1.137488 |  1.514281 |  2.123404 |
 
-## 2.3 Visualize the raw data before normalization
-
-<details style="display:inline">
-<summary>
-
-Show Code
-
-</summary>
-
-``` r
-pen   <- paste0("pen", inkdata |> filter(type %in% c("sample", "validation")) |> pull(pen))
-age   <- inkdata |> filter(type %in% c("sample", "validation")) |> pull(age)
-x     <- inkdata |> filter(type %in% c("sample", "validation")) |> select(starts_with("M"))
-
-um <- umap(x)
-um$layout |>
-  as_tibble() |>
-  mutate(pen = case_when(pen %in% paste0("pen", 1:7)~pen, !pen %in% paste0("pen", 1:7) ~ "validation")) |> 
-  ggplot(aes(x=V1, y=V2, color = pen))+
-  geom_point()+
-  scale_color_brewer(palette = "Set1")+
-  theme_minimal()
-```
-
-</details>
-
-<img src="README_files/figure-gfm/umap raw data visualization-1.png" style="display: block; margin: auto;" />
-
-## 2.4 Normalization and data cleaning
+## 2.3 Normalization and data cleaning
 
 <details style="display:inline">
 <summary>
@@ -268,9 +253,9 @@ inkdata2      <- ms |> bind_cols()
 
 </details>
 
-## 2.5 Visualize the spectra of the average sample
+## 2.4 Visualize the spectra of the average sample
 
-Plotting the pooled spectra from the experiment across all time points
+Plotting the pooled spectra from the experiment across all time points.
 
 <details>
 <summary>
@@ -319,7 +304,11 @@ df2 <-
 
 # 3 Unsupervised Machine Learning
 
-## 3.1 Define data used for the algorithms
+We use the unsupervised machine learning algorithms PCA and UMAP as
+these cover linear and non-linear data. As we see the umap separates the
+pen types well.
+
+Define data used for the algorithms
 
 First we’ll assign feature values to x, time points to age, and pen
 brand to pen.
@@ -339,9 +328,9 @@ x         <- inkdata2 |> filter(type == "sample") |> select(starts_with("M"))
 
 </details>
 
-## 3.2 Colored by pen brand
+## 3.1 Colored by pen brand
 
-### 3.2.1 Umap
+Code for making the umap
 
 <details style="display:inline">
 <summary>
@@ -373,7 +362,7 @@ umap_plot <-
 
 </details>
 
-### 3.2.2 PCA
+Code for making the PCA
 
 <details style="display:inline">
 <summary>
@@ -426,9 +415,9 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 
 <img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
-## 3.3 Colored by time since deposition
+## 3.2 Colored by time since deposition
 
-### 3.3.1 Umap
+Code for the umap
 
 <details style="display:inline">
 <summary>
@@ -460,7 +449,7 @@ umap_plot <-
 
 </details>
 
-### 3.3.2 PCA
+Code for the PCA
 
 <details style="display:inline">
 <summary>
@@ -514,7 +503,10 @@ unsupervised_plot  <- plot_grid(pca_plot+theme(legend.position = "none"), umap_p
 
 # 4 Supervised Machine Learning of Ink Discrimination
 
-## 4.1 Define data (again) for the analysis
+Define data for the analysis. x is the feature data, age is the days,
+pen is the penID used for classification. The signatures are exported
+average spectra from the 3 regions of interest from signature 1, 2, 3,
+4, and 5.
 
 <details style="display:inline">
 <summary>
@@ -533,14 +525,16 @@ signature <- inkdata2 |> filter(type == "validation") |> select(-starts_with("M"
 
 </details>
 
-## 4.2 Ink Discrimination Model
+## 4.1 Ink Discrimination Model
 
-We run the cross-validation for loop to obtain: 1. Cross validated hold
-out class predictions (variable: preds) 2. Cross validated hold out
-class probabilities (variable: preds) 3. For each fold predict (1 and 2)
-for the validation data (to average in the end) 4. Get the cross
-validated feature impact on the observations. I.e., how much does
-feature X influence the prediction of a given sample.
+We run the cross-validation for loop to obtain:
+
+1.  Cross validated hold out class predictions (variable: preds)
+2.  Cross validated hold out class probabilities (variable: preds)
+3.  For each fold predict (1 and 2) for the validation data (to average
+    in the end)
+4.  Get the cross validated feature impact on the observations. I.e.,
+    how much does feature X influence the prediction of a given sample.
 
 <details style="display:inline">
 <summary>
@@ -648,7 +642,9 @@ feature_importance <- shap_impact_all |> bind_rows() |> select(starts_with("M"))
 
 </details>
 
-## 4.3 Ink Discrimination Performance
+## 4.2 Ink Discrimination Performance
+
+Plot the log10 odds for the ink discrimination predictions
 
 <details style="display:inline">
 <summary>
@@ -686,7 +682,10 @@ Show Code
 
 ![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-## 4.4 Validation Data Predictions
+## 4.3 Validation Data Predictions
+
+Obtain mean probabilities for each validation signature replicate from
+the ML cross validation results.
 
 <details style="display:inline">
 <summary>
@@ -707,6 +706,7 @@ mean_prediction <-
   group_by(name, segment) |> 
   summarise(value = mean(value)) |> 
   pivot_wider(names_from = name, values_from = value)
+
 
 (
 blinded_predictions <- 
@@ -734,9 +734,9 @@ blinded_predictions <-
 
 </details>
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+<img src="README_files/figure-gfm/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
 
-### 4.4.1 Assessment of the predictions - do they fit into the distributions of the training data?
+### 4.3.1 Assessment of the predictions - do they fit into the distributions of the training data?
 
 > We are especially interested in signature 4 as it is uncertain in its
 > “john” predictions
@@ -747,7 +747,7 @@ only one predictor the linear model would be: y = a\*x + b. In this case
 the value on the y-value on the plot would be given by a multiplied by
 x.
 
-### 4.4.2 assessment of all predictions - filled by
+### 4.3.2 assessment of all predictions - filled by predicted value
 
 <details style="display:inline">
 <summary>
@@ -758,6 +758,8 @@ Show Code
 
 ``` r
 n = 10
+
+# We call it shap values because the impact is proportional to the shapley value in linear models  - but it is not entirely the same.
 validation_shap <- 
   shap_impact_signatures |> 
   bind_rows() |> 
@@ -811,7 +813,13 @@ true_preds <-
 
 > NOTICE: At this point we do not know if the predictions are correct.
 
-# 5 All pen regressions
+# 5 Supervised learning of pen age
+
+## 5.1 Model of all pens together
+
+In an ideal world we could date the ink of any pen in the same model,
+because certain molecules evaporate or degrade, but our data does not
+allow it.
 
 <details style="display:inline">
 <summary>
@@ -872,7 +880,7 @@ preds2 <-
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
-### 5.0.1 Model age!
+## 5.2 Model age of ink in individual pens
 
 <details style="display:inline">
 <summary>
@@ -964,6 +972,13 @@ for (pen_id in unique(pen)){
 ```
 
 </details>
+
+> Root mean squared error of the age regression result for each pen.
+> Most RMSEs are close to the age standard deviation (average point
+> distance to the mean age), which represents the simplest model (i.e.,
+> the mean). Hence, we can conclude that the inks does not contain much
+> aging signal.
+
 <details style="display:inline">
 <summary>
 
@@ -999,6 +1014,11 @@ penwise_age |>
     ## 6 pen6   15.2  14.2
     ## 7 pen7   15.0  14.2
 
+## 5.3 Univariate analysis of age correlated features in each pen
+
+Lets see how the number of correlated (Spearman correlation test)
+features per pen compares to the RMSE
+
 <details style="display:inline">
 <summary>
 
@@ -1015,7 +1035,7 @@ p_values <-
   summarise(
     correlation = cor(x=value, y=age, method = "spearman"),
     p.value = cor.test(value, age, method = "spearman")$p.value,
-    fdr = p.adjust(p.value)
+    fdr = p.adjust(p.value, method = "fdr")
   )
 
 fdr_count <- 
@@ -1050,6 +1070,15 @@ fdr_count |> ungroup() |>
     ## 6 pen6     51  15.2
     ## 7 pen7     44  15.0
 
+Here we see the position of many of the age correlated features in
+pen 1. They belong to a PEG.
+
+These are the most correlated peaks. Not extremely informative in a ML
+context as they contain a high “within technical replicate” variation at
+each time point - e.g., for most correlations the triplicate of day 0
+overlaps with the triplicate of day 44 even though their mean
+intensities are different.
+
 <details style="display:inline">
 <summary>
 
@@ -1071,12 +1100,16 @@ x |>
   ggplot(aes(x=age, y=value))+
   geom_smooth(method = "lm", se = F, color  = "gray50")+
   geom_point()+
-  facet_wrap(~name)
+  facet_wrap(~name, scales = "free")
 ```
 
 </details>
 
 ![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+Here we visualise some of the most correlated peaks in pen 1 as they
+seem to belong to the same cluster (PEG and adducts). The plot is
+labelled with m/z values.
 
 <details style="display:inline">
 <summary>
@@ -1086,7 +1119,6 @@ Show Code
 </summary>
 
 ``` r
-
 important_peaks <- 
   tibble(mass_preprocessed = as.numeric(gsub("M", "", features$name)), important = TRUE,
          fdr  = features$fdr)
@@ -1125,7 +1157,48 @@ important_peaks <-
   left_join(important_peaks) |> 
   filter(!duplicated(.data$id))
 
+(
+raw_data_significant_peaks <- 
+  df2 |> 
+  filter(pen == 1) |>
+  ggplot(aes(x=mass, y=sqrt(intensity)))+
+  geom_line()+
+  geom_point(data=important_peaks, size = 2, aes(x=mass, y=sqrt(intensity), color = factor(indexed)))+
+  geom_label_repel(data=important_peaks[important_peaks$mass<max_mass & important_peaks$mass>min_mass,], 
+                   aes(label =  sprintf("%.3f", round(mass, 5)), x=mass, y=sqrt(intensity)),
+                   segment.color = 'grey50',
+                   size=2,
+                   direction = "x",
+                   force = 20)+
+  theme_minimal()+
+  coord_cartesian(xlim = c(min_mass, max_mass))+
+  scale_color_brewer(palette = "Set2")+
+  guides(color=guide_legend(title = "Peak\ngroup"))+
+  theme(legend.position = c(0.95, 0.75), plot.margin = margin(10,10,0,0),
+      axis.text = element_text(size=8),
+      axis.title = element_text(size=8),
+      plot.title = element_text(size=8),
+      legend.text = element_text(size=8),
+      legend.title = element_text(size=8))
+)
+```
 
+</details>
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+And just to make clear that their FDRs are well below 0.01, a plot
+visualising the FDR of each peak. The data itself are pooled of all
+timepoints, to ensure each peak is visualized.
+
+<details style="display:inline">
+<summary>
+
+Show Code
+
+</summary>
+
+``` r
 (
 raw_data_significant_peaks <- 
   df2 |> 
@@ -1154,7 +1227,10 @@ raw_data_significant_peaks <-
 
 </details>
 
-![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+Checking that the correlation of pen1 features are not cause by a
+general decrease in TIC.
 
 <details style="display:inline">
 <summary>
@@ -1175,9 +1251,11 @@ Show Code
 
 </details>
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-#### 5.0.1.1 The pen with the most correlated features is pen1. Let’s do a PCA
+## 5.4 Principal component analysis of linear trends in aging ink (pen 1)
+
+### 5.4.1 PCA of Pen 1 - the ink type with most correlated features!
 
 <details style="display:inline">
 <summary>
@@ -1215,7 +1293,7 @@ summed_significant_peaks <-
   ggplot(aes(x=age, y=M194.1497))+
   geom_smooth(color = "white", method = "gam")+
   geom_point()+
-  labs(x="days", y="normalized intensity", title = "M194.1497")+
+  labs(x="days", y="normalized intensity", title = "M194.150")+
   theme_minimal()+
   theme(plot.margin = margin(10,0,0,10),
       axis.text = element_text(size=8),
@@ -1233,9 +1311,9 @@ plot_grid(pca_plot_pen1+theme(plot.margin = margin(0,0,20,0)), polymer_plot, nco
 
 </details>
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
-###### 5.0.1.1.0.1 Well.. lets do it for all pens
+### 5.4.2 All pen age PCAs
 
 <details style="display:inline">
 <summary>
@@ -1268,4 +1346,4 @@ for (pen_id in unique(pen)){
 
 </details>
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
